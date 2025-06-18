@@ -552,11 +552,33 @@ If your issue is with model generation quality, then please at least scan the fo
 ## XCFramework
 The XCFramework is a precompiled version of the library for iOS, visionOS, tvOS,
 and macOS. It can be used in Swift projects without the need to compile the
-library from source. For example:
+library from source. 
+
+### Swift Package Manager Integration
+
+**Option 1: Direct dependency (recommended):**
 ```swift
 // swift-tools-version: 5.10
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+import PackageDescription
 
+let package = Package(
+    name: "MyLlamaPackage",
+    dependencies: [
+        .package(url: "https://github.com/ggml-org/llama.cpp.git", from: "b5689")
+    ],
+    targets: [
+        .executableTarget(
+            name: "MyLlamaPackage",
+            dependencies: [
+                .product(name: "llama", package: "llama.cpp")
+            ])
+    ]
+)
+```
+
+**Option 2: Binary target (for more control):**
+```swift
+// swift-tools-version: 5.10
 import PackageDescription
 
 let package = Package(
@@ -564,19 +586,28 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "MyLlamaPackage",
-            dependencies: [
-                "LlamaFramework"
-            ]),
+            dependencies: ["llama"]),
         .binaryTarget(
-            name: "LlamaFramework",
-            url: "https://github.com/ggml-org/llama.cpp/releases/download/b5046/llama-b5046-xcframework.zip",
-            checksum: "c19be78b5f00d8d29a25da41042cb7afa094cbf6280a225abe614b03b20029ab"
+            name: "llama",
+            url: "https://github.com/ggml-org/llama.cpp/releases/download/b5689/llama-b5689-xcframework.zip",
+            checksum: "593fff39ea2250ffe3ff5ac1c06d8aa8655a80d190a3fb8adc42d64d75affa25"
         )
     ]
 )
 ```
-The above example is using an intermediate build `b5046` of the library. This can be modified
-to use a different version by changing the URL and checksum.
+
+### Key Changes (February 2025)
+
+As of release `b5689`, llama.cpp has moved to **XCFramework-only distribution** for Swift Package Manager:
+
+- ✅ **Faster builds**: No C++ compilation required
+- ✅ **Smaller projects**: No source files to index 
+- ✅ **Consistent binaries**: Same framework across all environments
+- ✅ **All Apple platforms**: macOS, iOS, tvOS, watchOS, visionOS
+
+**Migration**: Update your Package.swift to use the binary target approach shown above. The C API remains unchanged.
+
+For detailed migration instructions and troubleshooting, see: **[XCFRAMEWORK.md](XCFRAMEWORK.md)**
 
 ## Completions
 Command-line completion is available for some environments.
